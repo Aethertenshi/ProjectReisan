@@ -1,9 +1,9 @@
 <div align="center">
-  <img src="media/logo.png" alt="ProjectReisan Logo" width="400" />
+  <img src="media/logo.png" alt="ProjectReisan Logo"/>
   
   <br />
 
-  > **Free and Open-Source 2D Game Framework with Uniformity in Mind**
+  **Free and Open-Source 2D Game Framework with Uniformity in Mind**
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
   [![Language: C#](https://img.shields.io/badge/Language-C%23-239120.svg)](https://docs.microsoft.com/en-us/dotnet/csharp/)
