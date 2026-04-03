@@ -3,6 +3,9 @@ using reie;
 
 namespace MainGame;
 public class CoreGame {
+
+    Button clickme = new Button(new Rectangle(540, 310, 200, 100), "Click Me!", 20, "Metropolis");
+    
     public void Init(Engine engine) 
     {
         engine.Window(1280, 720);
@@ -13,12 +16,15 @@ public class CoreGame {
     public void Draw(Engine engine) 
     {
         engine.ClearScreen(Color.Black);
-        
-        // Draw Variables
-        Button clickme = new Button(new Rectangle(540, 310, 200, 100), "Click Me!", 20, "Metropolis");
+        engine.DrawButton(ref clickme);
 
-        if (engine.DrawButton(clickme)) {
+        if (clickme.isClicked)
+        {
             Console.WriteLine("Button Clicked!");
+        }
+        if (clickme.isHovering)
+        {
+            Console.WriteLine("Button Hovered!");
         }
         //_engine?.DrawCover("Char1", new Rectangle(0, 0, 1280, 720));
     }
