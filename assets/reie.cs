@@ -17,6 +17,9 @@ public struct Button
     public Color TextColor;
     public int FontSize;
 
+    public bool isHovering;
+    public bool isClicked;
+
     public Button(Rectangle rect, string text, int? fontsize = null, string? font = null, Color? baseColor = null, Color? hoverColor = null, Color? textColor = null)
     {
         Rect = rect;
@@ -101,7 +104,7 @@ public class Engine {
 
         Raylib.DrawTexturePro(texture, sourceRec, destRec, origin, 0.0f, finalTint);
     }
-    public bool DrawButton(Button btn)
+    public void DrawButton(ref Button btn)
     {
         Font font = _fonts.ContainsKey(btn.Font) ? _fonts[btn.Font] : Raylib.GetFontDefault();
         Vector2 mousePos = Raylib.GetMousePosition();
@@ -123,7 +126,8 @@ public class Engine {
         //Raylib.DrawText(btn.Text, (int)textX, (int)textY, fontSize, btn.TextColor);
         Raylib.DrawTextEx(font, btn.Text, new Vector2(textX, textY), fontSize, 0, btn.TextColor);
 
-        return isClicked;
+        btn.isHovering = isHovering;
+        btn.isClicked = isClicked;
     }
 
     // Main Game Functions
