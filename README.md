@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="media/logo.png" alt="ProjectReisan Logo" width="400" />
+  <img src="media/logo.png" alt="ProjectReisan Logo" width="1200" />
   
   <br />
 
@@ -72,6 +72,3 @@ ProjectReisan stands on the shoulders of giants. A huge thank you to the followi
 -----
 
 *Happy Game Developing\!*
-
-```
-```
