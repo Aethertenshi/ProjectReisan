@@ -7,7 +7,14 @@ using System.Diagnostics;
 
 namespace reie;
 
-public struct Button
+// Interfaces and Structs
+public interface IDrawable
+{
+    void Draw(Engine engine);
+}
+
+// Helper Classes
+public class Button : IDrawable
 {
     public Rectangle Rect;
     public string Text;
@@ -17,10 +24,11 @@ public struct Button
     public Color TextColor;
     public int FontSize;
 
-    public bool isHovering;
     public bool isClicked;
+    public bool isHovered;
+    public Action<Button>? isAction;
 
-    public Button(Rectangle rect, string text, int? fontsize = null, string? font = null, Color? baseColor = null, Color? hoverColor = null, Color? textColor = null)
+    public Button(DrawBatch batch, Action<Button>? onAction, Rectangle rect, string text, int? fontsize = null, string? font = null, Color? baseColor = null, Color? hoverColor = null, Color? textColor = null)
     {
         Rect = rect;
         Text = text;
@@ -29,9 +37,41 @@ public struct Button
         TextColor = textColor ?? Color.White;
         Font = font ?? "DefaultFont";
         FontSize = fontsize ?? 20;
+        isAction = onAction;
+
+        batch.Add(this);
+    }
+    public void Draw(Engine engine)
+    {
+        engine.DrawButton(this);
+        if (isHovered && isAction != null)
+        {
+            isAction?.Invoke(this);
+        }
+    }
+}
+public class DrawBatch
+{
+    public List<IDrawable> Elements;
+
+    public DrawBatch()
+    {
+        Elements = new List<IDrawable>();
+    }
+    public void Add(IDrawable drawable)
+    {
+        Elements.Add(drawable);
+    }
+    public void DrawAll(Engine engine)
+    {
+        foreach (var element in Elements)
+        {
+            element.Draw(engine);
+        }
     }
 }
 
+// Main Engine Class
 public class Engine {
     // Variables
     private Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>();
@@ -104,14 +144,12 @@ public class Engine {
 
         Raylib.DrawTexturePro(texture, sourceRec, destRec, origin, 0.0f, finalTint);
     }
-    public void DrawButton(ref Button btn)
+    public void DrawButton(Button btn)
     {
         Font font = _fonts.ContainsKey(btn.Font) ? _fonts[btn.Font] : Raylib.GetFontDefault();
         Vector2 mousePos = Raylib.GetMousePosition();
         bool isHovering = Raylib.CheckCollisionPointRec(mousePos, btn.Rect);
-        bool isClicked = isHovering && Raylib.IsMouseButtonPressed(MouseButton.Left);
-
-        Debug.WriteLine(font);
+        bool isClicked = Raylib.IsMouseButtonPressed(MouseButton.Left) && isHovering;
 
         Color currentColor = isHovering ? btn.HoverColor : btn.BaseColor;
 
@@ -123,11 +161,10 @@ public class Engine {
         float textX = btn.Rect.X + (btn.Rect.Width - textWidth) / 2;
         float textY = btn.Rect.Y + (btn.Rect.Height - fontSize) / 2;
 
-        //Raylib.DrawText(btn.Text, (int)textX, (int)textY, fontSize, btn.TextColor);
         Raylib.DrawTextEx(font, btn.Text, new Vector2(textX, textY), fontSize, 0, btn.TextColor);
 
-        btn.isHovering = isHovering;
         btn.isClicked = isClicked;
+        btn.isHovered = isHovering;
     }
 
     // Main Game Functions
