@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="media/logo.png" alt="ProjectReisan Logo"/>
+  <img src="media/logo.png" alt="ProjectReisan Logo" width="1300" />
   
   <br />
 
