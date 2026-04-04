@@ -43,7 +43,6 @@ To build and run ProjectReisan, you will need:
 
 ## 📂 Project Structure
 
-  * `/assets` - Contains default assets, templates, and placeholder files.
   * `/media` - Framework-related media, logos, and documentation images.
   * `/modules` - Core framework modules, extensions, and subsystems.
   * `POL.sln` & `POL.csproj` - The primary .NET solution and project files.
