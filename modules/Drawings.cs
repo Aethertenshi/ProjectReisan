@@ -61,11 +61,19 @@ public partial class Engine
         Raylib.DrawTexturePro(texture, sourceRec, destRec, origin, 0.0f, finalTint);
     }
 
-    public void DrawButton(Button btn)
+    public void DrawButton(rUI.Button btn)
     {
+        Rectangle finalRect = new Rectangle(
+            btn.Rect.X + _currentTranslation.X,
+            btn.Rect.Y + _currentTranslation.Y,
+            btn.Rect.Width,
+            btn.Rect.Height
+        );
+
         Font font = _fonts.ContainsKey(btn.Font) ? _fonts[btn.Font] : Raylib.GetFontDefault();
         Vector2 mousePos = Raylib.GetMousePosition();
-        bool isHovering = Raylib.CheckCollisionPointRec(mousePos, btn.Rect);
+
+        bool isHovering = Raylib.CheckCollisionPointRec(mousePos, finalRect);
         bool isClicked = Raylib.IsMouseButtonPressed(MouseButton.Left) && isHovering;
 
         Color currentColor = isHovering ? btn.HoverColor : btn.BaseColor;
@@ -75,9 +83,9 @@ public partial class Engine
         float textX = btn.Rect.X + (btn.Rect.Width - textWidth) / 2;
         float textY = btn.Rect.Y + (btn.Rect.Height - btn.FontSize) / 2;
 
-        Raylib.DrawTextEx(font, btn.Text, new Vector2(textX, textY), btn.FontSize, 1, btn.TextColor);
-
-        btn.isClicked = isClicked;
         btn.isHovered = isHovering;
+        btn.isClicked = isClicked;
+
+        Raylib.DrawTextEx(font, btn.Text, new Vector2(textX, textY), btn.FontSize, 1, btn.TextColor);
     }
 }

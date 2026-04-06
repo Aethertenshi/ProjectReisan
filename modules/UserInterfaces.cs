@@ -1,8 +1,10 @@
 ﻿using Raylib_cs;
 using System;
+using System.Diagnostics;
+using System.Numerics;
 
 namespace reien;
-public partial class Engine
+public partial class rUI
 {
     public class ScrollingFrame : IDrawable
     {
@@ -28,24 +30,41 @@ public partial class Engine
 
         public void Update(Engine engine, float dt)
         {
-            // 1. Fetch the input directly from Raylib
             float mouseScrollDelta = Raylib.GetMouseWheelMove();
-
-            // Optional check: You may want to add logic here to ensure the mouse 
-            // is actually hovering over 'Rect' before allowing it to scroll!
-            if (mouseScrollDelta == 0) return;
-
-            // 2. Apply the scroll
-            ScrollPosition -= mouseScrollDelta * ScrollSpeed;
-
-            // 3. Clamp the scroll position
-            float maxScroll = Math.Max(0, ContentHeight - Rect.Height);
-            ScrollPosition = Math.Clamp(ScrollPosition, 0, maxScroll);
-
-            // 4. Propagate the Update call to children (if your children also need to update over time)
+            Vector2 mouse = Raylib.GetMousePosition();
+            // Only scroll if mouse is over the frame
+            if (mouse.X >= Rect.X && mouse.X <= Rect.X + Rect.Width && mouse.Y >= Rect.Y && mouse.Y <= Rect.Y + Rect.Height)
+            {
+                if (mouseScrollDelta != 0)
+                {
+                    ScrollPosition -= mouseScrollDelta * ScrollSpeed;
+                    float maxScroll = Math.Max(0, ContentHeight - Rect.Height);
+                    ScrollPosition = Math.Clamp(ScrollPosition, 0, maxScroll);
+                }
+            }
+            // Propagate Update to children, but adjust mouse position for hit detection
             foreach (var child in Children)
             {
-                child.Update(engine, dt);
+                // If child is a Button, update its hitbox for offset
+                if (child is Button btn)
+                {
+                    // Save original rect
+                    var origRect = btn.Rect;
+                    btn.Rect = new Rectangle(
+                        Rect.X + btn.Rect.X,
+                        Rect.Y + btn.Rect.Y - ScrollPosition,
+                        btn.Rect.Width,
+                        btn.Rect.Height
+                    );
+                    btn.Update(engine, dt);
+                    btn.Draw(engine);
+                    btn.Rect = origRect; // Restore
+                }
+                else
+                {
+                    child.Update(engine, dt);
+                    child.Draw(engine);
+                }
             }
         }
 
@@ -55,7 +74,7 @@ public partial class Engine
             engine.DrawRectangle(Rect.X, Rect.Y, Rect.Width, Rect.Height, BackgroundColor);
 
             engine.SetScissorRectangle(Rect);
-            engine.PushTranslation(0, -ScrollPosition);
+            engine.PushTranslation(Rect.X, Rect.Y - ScrollPosition);
 
             foreach (var child in Children)
             {
@@ -103,7 +122,7 @@ public partial class Engine
         public bool isHovered;
         public Action<Button>? isAction;
 
-        public Button(DrawBatch batch, Action<Button>? onAction, Rectangle rect, string text, int? fontsize = null, string? font = null, Color? baseColor = null, Color? hoverColor = null, Color? textColor = null)
+        public Button(DrawBatch? batch, Action<Button>? onAction, Rectangle rect, string text, int? fontsize = null, string? font = null, Color? baseColor = null, Color? hoverColor = null, Color? textColor = null)
         {
             Rect = rect;
             Text = text;
@@ -114,19 +133,22 @@ public partial class Engine
             FontSize = fontsize ?? 20;
             isAction = onAction;
 
-            batch.Add(this);
+            if (batch != null)
+            {
+                batch.Add(this);
+            }
         }
 
         public void Update(Engine engine, float dt)
         {
+            if (isHovered && isAction != null)
+            {
+                isAction?.Invoke(this);
+            }
         }
         public void Draw(Engine engine)
         {
             engine.DrawButton(this);
-            if (isHovered && isAction != null && isClicked)
-            {
-                isAction?.Invoke(this);
-            }
         }
     }
 }
