@@ -9,6 +9,7 @@ namespace reien;
 public interface IDrawable
 {
     void Draw(Engine engine);
+    void Update(Engine engine, float dt);
 }
 public interface IGameRunner
 {
@@ -35,6 +36,7 @@ public class DrawBatch
         foreach (var element in Elements)
         {
             element.Draw(engine);
+            element.Update(engine, Raylib.GetFrameTime());
         }
     }
 }
@@ -42,6 +44,46 @@ public class DrawBatch
 // Main Engine Class
 public partial class Engine
 {
+    // Cache
+    private Stack<Vector2> _translationStack = new Stack<Vector2>();
+    private Vector2 _currentTranslation = Vector2.Zero;
+    private Rectangle? _currentScissor = null;
+
+    // Scissor
+    public void SetScissorRectangle(Rectangle rect)
+    {
+        // Raylib has native hardware clipping. It expects integers for screen coordinates.
+        Raylib.BeginScissorMode((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height);
+    }
+    public void ClearScissorRectangle()
+    {
+        // Disables the clipping region
+        Raylib.EndScissorMode();
+    }
+    public void PushTranslation(float x, float y)
+    {
+        _translationStack.Push(_currentTranslation);
+        _currentTranslation += new Vector2(x, y);
+    }
+
+    public void PopTranslation()
+    {
+        if (_translationStack.Count > 0)
+        {
+            _currentTranslation = _translationStack.Pop();
+        }
+    }
+    public void DrawScissorRectangle(float x, float y, float width, float height, Color color)
+    {
+        // 1. Add the current translation offset to the drawing coordinates
+        float finalX = x + _currentTranslation.X;
+        float finalY = y + _currentTranslation.Y;
+
+        // 2. Pass the translated coordinates to Raylib
+        Raylib.DrawRectangle((int)finalX, (int)finalY, (int)width, (int)height, color);
+    }
+
+
     // Properties
     public int ScreenWidth => Raylib.GetScreenWidth();
     public int ScreenHeight => Raylib.GetScreenHeight();
