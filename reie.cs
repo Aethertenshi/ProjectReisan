@@ -1,6 +1,7 @@
 using Raylib_cs;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Numerics;
 
 namespace reien;
@@ -35,6 +36,7 @@ public class DrawBatch
     {
         foreach (var element in Elements)
         {
+            Debug.WriteLine(element);
             element.Draw(engine);
             element.Update(engine, Raylib.GetFrameTime());
         }
