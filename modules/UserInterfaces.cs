@@ -3,8 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Numerics;
 
-namespace reien;
-public partial class rUI
+namespace reien.UI
 {
     public class ScrollingFrame : IDrawable
     {

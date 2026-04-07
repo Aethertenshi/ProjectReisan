@@ -1,6 +1,7 @@
 ﻿using Raylib_cs;
 using System;
 using System.Numerics;
+using reien.UI;
 
 namespace reien;
 public partial class Engine
@@ -61,7 +62,7 @@ public partial class Engine
         Raylib.DrawTexturePro(texture, sourceRec, destRec, origin, 0.0f, finalTint);
     }
 
-    public void DrawButton(rUI.Button btn)
+    public void DrawButton(Button btn)
     {
         Rectangle finalRect = new Rectangle(
             btn.Rect.X + _currentTranslation.X,
