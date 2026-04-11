@@ -9,6 +9,7 @@ namespace reien;
 // Interfaces and Structs
 public interface IDrawable
 {
+    Rectangle Rect { get; set; }
     void Draw(Engine engine);
     void Update(Engine engine, float dt);
 }

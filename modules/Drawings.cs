@@ -64,17 +64,10 @@ public partial class Engine
 
     public void DrawButton(Button btn)
     {
-        Rectangle finalRect = new Rectangle(
-            btn.Rect.X + _currentTranslation.X,
-            btn.Rect.Y + _currentTranslation.Y,
-            btn.Rect.Width,
-            btn.Rect.Height
-        );
-
         Font font = _fonts.ContainsKey(btn.Font) ? _fonts[btn.Font] : Raylib.GetFontDefault();
         Vector2 mousePos = Raylib.GetMousePosition();
 
-        bool isHovering = Raylib.CheckCollisionPointRec(mousePos, finalRect);
+        bool isHovering = Raylib.CheckCollisionPointRec(mousePos, btn.Rect);
         bool isClicked = Raylib.IsMouseButtonPressed(MouseButton.Left) && isHovering;
 
         Color currentColor = isHovering ? btn.HoverColor : btn.BaseColor;

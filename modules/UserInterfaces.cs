@@ -1,115 +1,80 @@
 ﻿using Raylib_cs;
 using System;
 using System.Diagnostics;
+using System.Dynamic;
 using System.Numerics;
 
 namespace reien.UI
 {
-    public class ScrollingFrame : IDrawable
+    public class ScrollContainer : IDrawable
     {
-        public Rectangle Rect;
+        private float visualScrollOffset = 0;
+        private float targetScrollOffset = 0;
+        private int currentContentHeight = 0;
+        private int currentContentWidth = 0;
+        private Vector2 lastPosition = Vector2.Zero;
+
+        public Rectangle Rect { get; set; }
         public Color BackgroundColor;
-        public Color ScrollbarColor;
-        public float ScrollPosition;
+        public List<IDrawable> Children;
         public float ScrollSpeed;
-
-        public List<IDrawable> Children { get; private set; }
-        public float ContentHeight { get; set; } = 0f;
-
-        public ScrollingFrame(DrawBatch batch, Rectangle rect, Color? backgroundColor = null, Color? scrollbarColor = null, float scrollSpeed = 20f, List<IDrawable>? children = null)
+        public Vector2 Padding;
+        public ScrollContainer(DrawBatch? batch, Rectangle rect, List<IDrawable>? children = null, Color? backgroundColor = null, float scrollSpeed = 20.0f, Vector2 padding = new Vector2())
         {
             Rect = rect;
             BackgroundColor = backgroundColor ?? Color.DarkGray;
-            ScrollbarColor = scrollbarColor ?? Color.LightGray;
-            ScrollSpeed = scrollSpeed;
             Children = children ?? new List<IDrawable>();
-
-            batch.Add(this);
+            ScrollSpeed = scrollSpeed;
+            Padding = padding;
+            if (batch != null)
+            {
+                batch.Add(this);
+            }
         }
 
         public void Update(Engine engine, float dt)
         {
-            float mouseScrollDelta = Raylib.GetMouseWheelMove();
-            Vector2 mouse = Raylib.GetMousePosition();
-            // Only scroll if mouse is over the frame
-            if (mouse.X >= Rect.X && mouse.X <= Rect.X + Rect.Width && mouse.Y >= Rect.Y && mouse.Y <= Rect.Y + Rect.Height)
+            bool isPressing = Raylib.IsMouseButtonDown(MouseButton.Left);
+            float isHovering = Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), Rect);
+            float scrollDelta = Raylib.GetMouseWheelMove();
+            
+            if (isHovering > 0 && scrollDelta != 0) targetScrollOffset -= scrollDelta * ScrollSpeed;
+            if (isPressing && isHovering > 0) targetScrollOffset += (Raylib.GetMousePosition().Y - lastPosition.Y);
+            lastPosition = Raylib.GetMousePosition();
+
+            // 0.1f is the 'tightness' - lower is smoother/slower, higher is snappier
+            visualScrollOffset = Raymath.Lerp(visualScrollOffset, targetScrollOffset, 8f * dt);
+            currentContentHeight = (int)Padding.Y + (int)Rect.Y;
+            currentContentWidth = (int)Padding.X + (int)Rect.X;
+
+            if (Math.Abs(visualScrollOffset - targetScrollOffset) < 0.1f) visualScrollOffset = targetScrollOffset;
+
+            foreach (IDrawable child in Children)
             {
-                if (mouseScrollDelta != 0)
+                if (child.Rect.X > 0)
                 {
-                    ScrollPosition -= mouseScrollDelta * ScrollSpeed;
-                    float maxScroll = Math.Max(0, ContentHeight - Rect.Height);
-                    ScrollPosition = Math.Clamp(ScrollPosition, 0, maxScroll);
-                }
-            }
-            // Propagate Update to children, but adjust mouse position for hit detection
-            foreach (var child in Children)
-            {
-                // If child is a Button, update its hitbox for offset
-                if (child is Button btn)
-                {
-                    // Save original rect
-                    var origRect = btn.Rect;
-                    btn.Rect = new Rectangle(
-                        Rect.X + btn.Rect.X,
-                        Rect.Y + btn.Rect.Y - ScrollPosition,
-                        btn.Rect.Width,
-                        btn.Rect.Height
-                    );
-                    btn.Update(engine, dt);
-                    btn.Draw(engine);
-                    btn.Rect = origRect; // Restore
-                }
-                else
-                {
-                    child.Update(engine, dt);
+                    Rectangle modifiedRect = child.Rect;
+                    Rectangle originalRect = child.Rect;
+
+                    modifiedRect.Y = currentContentHeight + visualScrollOffset;
+                    modifiedRect.X = currentContentWidth;
+                    child.Rect = modifiedRect;
                     child.Draw(engine);
+                    child.Update(engine, dt);
+                    child.Rect = originalRect;
+
+                    currentContentHeight += (int)(child.Rect.Height + Padding.Y);
                 }
             }
         }
-
-        // Correctly implements IDrawable.Draw
         public void Draw(Engine engine)
         {
-            engine.DrawRectangle(Rect.X, Rect.Y, Rect.Width, Rect.Height, BackgroundColor);
-
-            engine.SetScissorRectangle(Rect);
-            engine.PushTranslation(Rect.X, Rect.Y - ScrollPosition);
-
-            foreach (var child in Children)
-            {
-                child.Draw(engine);
-            }
-
-            engine.PopTranslation();
-            engine.ClearScissorRectangle();
-
-            DrawScrollbar(engine);
-        }
-
-        private void DrawScrollbar(Engine engine)
-        {
-            if (ContentHeight <= Rect.Height) return;
-
-            float scrollbarWidth = 10f;
-            float viewableRatio = Rect.Height / ContentHeight;
-            float scrollbarThumbHeight = Rect.Height * viewableRatio;
-
-            float scrollTrackSpace = ContentHeight - Rect.Height;
-            float scrollProgress = ScrollPosition / scrollTrackSpace;
-            float scrollbarY = Rect.Y + (scrollProgress * (Rect.Height - scrollbarThumbHeight));
-
-            engine.DrawRectangle(
-                Rect.X + Rect.Width - scrollbarWidth,
-                scrollbarY,
-                scrollbarWidth,
-                scrollbarThumbHeight,
-                ScrollbarColor
-            );
+            Raylib.DrawRectangle((int)Rect.X, (int)Rect.Y, (int)Rect.Width, (int)Rect.Height, BackgroundColor);
         }
     }
     public class Button : IDrawable
     {
-        public Rectangle Rect;
+        public Rectangle Rect { get; set; }
         public string Text;
         public string Font;
         public Color BaseColor;
